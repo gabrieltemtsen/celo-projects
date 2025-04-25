@@ -306,7 +306,7 @@ export default function FrameApp() {
         }
         return prev;
       });
-      sdk.actions.openUrl(`https://gap.karmahq.xyz/projects/${currentProject.id}`);
+      // sdk.actions.openUrl(`https://gap.karmahq.xyz/projects/${currentProject.id}`);
     }
 
     setTimeout(() => {
