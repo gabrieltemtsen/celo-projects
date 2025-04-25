@@ -337,7 +337,7 @@ export default function FrameApp() {
       {showOnboarding && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 max-w-sm text-center shadow-2xl">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Welcome to Celo Grants!</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4"> Welcome to Celo Projects </h2>
             <p className="text-gray-600 mb-6">
               Swipe <span className="text-green-500 font-semibold">right</span> to like a project and endorse it, or swipe{' '}
               <span className="text-red-500 font-semibold">left</span> to pass.
