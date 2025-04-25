@@ -85,7 +85,9 @@ type UIProject = {
   tags?: string[];
   season: string;
 };
-const celoImageURL = 'https://99bitcoins.com/wp-content/uploads/2024/08/CELOcrypto-768x436.jpg'
+
+const celoImageURL = 'https://99bitcoins.com/wp-content/uploads/2024/08/CELOcrypto-768x436.jpg';
+
 // Simple markdown parser for bold (*text*) and italic (_text_)
 const parseMarkdown = (text: string): string => {
   // Escape HTML to prevent XSS
@@ -112,11 +114,13 @@ export default function FrameApp() {
   const [allProjects, setAllProjects] = useState<UIProject[]>([]);
   const [currentSeasonId, setCurrentSeasonId] = useState<string>('');
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [likedProjects, setLikedProjects] = useState<UIProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
   const [direction, setDirection] = useState<string | null>(null);
   const [showSeasonSelector, setShowSeasonSelector] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(true);
+  const [swipeFeedback, setSwipeFeedback] = useState<string | null>(null);
 
   // Celo-inspired color palette
   const celoColors = {
@@ -126,6 +130,19 @@ export default function FrameApp() {
     neutral: '#F5F6F5',
     dark: '#121212',
   };
+
+  // Load liked projects from localStorage on mount
+  useEffect(() => {
+    const storedLikedProjects = localStorage.getItem('likedProjects');
+    if (storedLikedProjects) {
+      setLikedProjects(JSON.parse(storedLikedProjects));
+    }
+  }, []);
+
+  // Save liked projects to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('likedProjects', JSON.stringify(likedProjects));
+  }, [likedProjects]);
 
   // Fetch programs on mount
   useEffect(() => {
@@ -140,7 +157,7 @@ export default function FrameApp() {
           description: program.description,
           startDate: program.metadata.startDate || new Date(program.createdAt).toISOString().split('T')[0],
           endDate: new Date(program.createdAt).toISOString().split('T')[0],
-          isGrant: program.metadata.type === 'program',
+          isGrant: program.metadata.type === 'program', // Reverted to correct logic
           chainID: program.chainID,
         }));
 
@@ -181,7 +198,7 @@ export default function FrameApp() {
             `https://gapapi.karmahq.xyz/communities/celo/grants?page=0&pageLimit=12&status=all&sort=milestones&selectedProgramIds=${currentSeasonId}_${currentSeason.chainID}`
           );
           const grantResponse = await response.json();
-          projects = grantResponse.data; // Extract projects from data array
+          projects = grantResponse.data;
         } else {
           const response = await fetch(
             `https://gapapi.karmahq.xyz/projects/by-program?programId=${currentSeasonId}&chainId=42220&communityId=celo`
@@ -190,10 +207,8 @@ export default function FrameApp() {
         }
 
         const mappedProjects: UIProject[] = projects.map(project => {
-          // Determine if project is from /grants (GrantProject) or /projects/by-program (ProgramProject)
           const isGrantProject = 'details' in project;
 
-          // Access fields based on project type
           const projectDetails = isGrantProject
             ? (project as any).projectDetails.data
             : (project as any).projectDetails.data;
@@ -202,12 +217,10 @@ export default function FrameApp() {
             ? (project as GrantProject).details?.description
             : (project as ProgramProject).grant_details?.description;
 
-          // Extract problem and solution
           let problem: string;
           let solution: string;
 
           if (isGrantProject) {
-            // For grants, prefer projectDetails.data.problem/solution
             problem = projectDetails.problem ||
                       (grantDescription
                         ? grantDescription.split('##').find(part => part.includes('Why it Matters'))?.trim() ||
@@ -219,7 +232,6 @@ export default function FrameApp() {
                            projectDetails.description.split('\n').slice(2, 4).join(' ')
                          : projectDetails.description.split('\n').slice(2, 4).join(' '));
           } else {
-            // For programs, parse grantDescription or fallback to description
             problem = grantDescription
               ? grantDescription.split('##').find(part => part.includes('Why it Matters'))?.trim() ||
                 projectDetails.description.split('\n').slice(0, 2).join(' ')
@@ -230,7 +242,6 @@ export default function FrameApp() {
               : projectDetails.description.split('\n').slice(2, 4).join(' ');
           }
 
-          // Fallback to defaults if problem or solution are undefined
           problem = problem || 'No problem description available';
           solution = solution || 'No solution description available';
 
@@ -285,14 +296,22 @@ export default function FrameApp() {
 
   const handleSwipe = useCallback((dir: string) => {
     setDirection(dir);
+    setSwipeFeedback(dir === 'right' ? 'Liked!' : 'Passed');
 
-    if (dir === 'right') {
+    if (dir === 'right' && currentProject) {
+      setLikedProjects(prev => {
+        if (!prev.some(p => p.id === currentProject.id)) {
+          return [...prev, currentProject];
+        }
+        return prev;
+      });
       sdk.actions.openUrl(`https://gap.karmahq.xyz/projects/${currentProject.id}`);
     }
 
     setTimeout(() => {
       setCurrentIndex((prevIndex) => prevIndex + 1);
       setDirection(null);
+      setSwipeFeedback(null);
     }, 300);
   }, [currentProject]);
 
@@ -332,12 +351,12 @@ export default function FrameApp() {
   }
 
   return (
-    <div className="flex flex-col max-w-md mx-auto w-full p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen font-poppins">
+    <div className="flex flex-col max-w-md mx-auto w-full p-4 sm:p-6 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen font-poppins">
       {/* Onboarding Overlay */}
       {showOnboarding && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-6 max-w-sm text-center shadow-2xl">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4"> Welcome to Celo Projects </h2>
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl animate-fade-in">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Welcome to Celo Projects</h2>
             <p className="text-gray-600 mb-6">
               Swipe <span className="text-green-500 font-semibold">right</span> to like a project and endorse it, or swipe{' '}
               <span className="text-red-500 font-semibold">left</span> to pass.
@@ -363,7 +382,7 @@ export default function FrameApp() {
       )}
 
       {/* Season selector */}
-      <div className="mb-6 relative z-10">
+      <div className="mb-4 sm:mb-6 relative z-10">
         <button
           onClick={() => setShowSeasonSelector(prev => !prev)}
           className="flex items-center justify-between w-full p-4 bg-white border border-gray-200 rounded-2xl shadow-sm hover:bg-gray-50 transition-all duration-200"
@@ -372,14 +391,14 @@ export default function FrameApp() {
             <div className={`w-2 h-8 rounded-full mr-3 bg-[${celoColors.gold}]`}></div>
             <div>
               <span className="block text-sm font-semibold text-gray-800">{currentSeason?.name || 'Select Program'}</span>
-              <span className="block text-xs text-gray-500">{currentSeason?.description || 'Choose a program'}</span>
+              <span className="block text-xs text-gray-500 truncate max-w-[200px] sm:max-w-[300px]">{currentSeason?.description || 'Choose a program'}</span>
             </div>
           </div>
-          <ChevronDown size={18} className={`text-gray-500 transition-transform ${showSeasonSelector ? 'rotate-180' : ''}`} />
+          <ChevronDown size={18} className={`text-gray-500 transition-transform duration-200 ${showSeasonSelector ? 'rotate-180' : ''}`} />
         </button>
 
         {showSeasonSelector && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden z-20">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden z-20 animate-slide-down">
             {seasons.map(season => (
               <button
                 key={season.id}
@@ -391,7 +410,7 @@ export default function FrameApp() {
                 <div className={`w-2 h-8 rounded-full mr-3 ${season.id === currentSeasonId ? `bg-[${celoColors.gold}]` : 'bg-gray-300'}`}></div>
                 <div className="text-left">
                   <span className="block text-sm font-semibold text-gray-800">{season.name}</span>
-                  <span className="block text-xs text-gray-500">{season.description}</span>
+                  <span className="block text-xs text-gray-500 truncate max-w-[200px] sm:max-w-[300px]">{season.description}</span>
                 </div>
               </button>
             ))}
@@ -399,12 +418,12 @@ export default function FrameApp() {
         )}
       </div>
 
-      <div className="relative h-96 w-full">
+      <div className="relative w-full h-[50vh] max-h-[400px] min-h-[300px] overflow-hidden">
         {outOfProjects ? (
-          <div className="flex flex-col items-center justify-center w-full h-96 bg-gradient-to-br from-green-50 to-gold-50 rounded-2xl shadow-lg text-center">
+          <div className="flex flex-col items-center justify-center w-full h-full bg-gradient-to-br from-green-50 to-gold-50 rounded-2xl shadow-lg text-center animate-fade-in">
             <div className="text-4xl mb-4">🎉</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Program Complete!</h2>
-            <p className="text-gray-600 mb-6">You&#39;ve reviewed all projects in {currentSeason?.name}</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Program Complete!</h2>
+            <p className="text-gray-600 mb-6 px-4">You've reviewed all projects in {currentSeason?.name}</p>
             <button
               onClick={() => setCurrentIndex(0)}
               className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full font-semibold shadow-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 flex items-center"
@@ -414,100 +433,112 @@ export default function FrameApp() {
             </button>
           </div>
         ) : (
-          <TinderCard
-            onSwipe={handleSwipe}
-            preventSwipe={["up", "down"]}
-            key={currentProject?.id || 'empty'}
-            className="absolute"
-          >
-            <div className="w-full h-96 rounded-2xl shadow-2xl overflow-hidden bg-white transform transition-all duration-300 hover:scale-105">
-              {/* Card header with image */}
-              <div className="relative h-48">
-                <img
-                  src={currentProject?.banner || celoImageURL}
-                  alt={currentProject?.title || 'Project'}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                <div className="absolute top-3 left-3">
-                  <span className="px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
-                    S{currentProject?.season || ''}
-                  </span>
+          <div className="relative w-full h-full">
+            {/* Swipe feedback overlay */}
+            {swipeFeedback && (
+              <div className="absolute inset-0 flex items-center justify-center z-10 animate-fade-out">
+                <div className={`text-2xl sm:text-3xl font-bold ${swipeFeedback === 'Liked!' ? 'text-green-500' : 'text-red-500'} bg-white/80 px-6 py-3 rounded-full shadow-lg`}>
+                  {swipeFeedback}
                 </div>
-                <div className="absolute bottom-0 left-0 p-4 w-full">
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {currentProject?.tags?.map(tag => (
-                      <span key={tag} className="px-2 py-1 bg-green-600/80 text-white text-xs rounded-full">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                  <h2 className="text-xl font-bold text-white">{currentProject?.title || 'Untitled'}</h2>
-                </div>
-                {currentProject?.videoUrl && (
-                  <button
-                    onClick={toggleVideo}
-                    className="absolute top-3 right-3 bg-black/60 p-2 rounded-full hover:bg-black/80 transition-colors duration-200"
-                  >
-                    <Video size={20} className="text-white" />
-                  </button>
-                )}
               </div>
-
-              {/* Card content */}
-              <div className="p-4 h-48 overflow-y-auto bg-neutral-50">
-                {showVideo && currentProject?.videoUrl ? (
-                  <div className="h-full w-full">
-                    <iframe
-                      src={currentProject.videoUrl}
-                      className="w-full h-full rounded-lg"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
+            )}
+            <TinderCard
+              onSwipe={handleSwipe}
+              preventSwipe={["up", "down"]}
+              key={currentProject?.id || 'empty'}
+              className="absolute w-full h-full"
+              swipeRequirementType="position"
+              swipeThreshold={100}
+            >
+              <div className="w-full h-full rounded-2xl shadow-2xl overflow-hidden bg-white transform transition-all duration-300 hover:scale-105 box-border">
+                {/* Card header with image */}
+                <div className="relative h-1/2">
+                  <img
+                    src={currentProject?.banner || celoImageURL}
+                    alt={currentProject?.title || 'Project'}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                  <div className="absolute top-3 left-3">
+                    <span className="px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
+                      S{currentProject?.season || ''}
+                    </span>
                   </div>
-                ) : (
-                  <>
-                    <div className="mb-3">
-                      {currentProject?.isGrant ? (
-                        <h3 className="text-sm font-semibold text-gray-500">Problem</h3>
-                      ): (
-                        <h3 className="text-sm font-semibold text-gray-500">Description</h3>
-                      )}
-                      <p
-                        className="text-gray-800 text-sm"
-                        dangerouslySetInnerHTML={{ __html: currentProject?.problem || 'No problem description' }}
-                      />
+                  <div className="absolute bottom-0 left-0 p-4 w-full">
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {currentProject?.tags?.map(tag => (
+                        <span key={tag} className="px-2 py-1 bg-green-600/80 text-white text-xs rounded-full">
+                          {tag}
+                        </span>
+                      ))}
                     </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-500">Solution</h3>
-                      <p
-                        className="text-gray-800 text-sm"
-                        dangerouslySetInnerHTML={{ __html: currentProject?.solution || 'No solution description' }}
-                      />
-                    </div>
+                    <h2 className="text-lg sm:text-xl font-bold text-white truncate">{currentProject?.title || 'Untitled'}</h2>
+                  </div>
+                  {currentProject?.videoUrl && (
                     <button
-                      onClick={goToDemo}
-                      className="flex items-center mt-4 text-green-600 font-semibold text-sm hover:text-green-700 transition-colors duration-200"
+                      onClick={toggleVideo}
+                      className="absolute top-3 right-3 bg-black/60 p-2 rounded-full hover:bg-black/80 transition-colors duration-200"
                     >
-                      View Demo <ExternalLink size={16} className="ml-1" />
+                      <Video size={20} className="text-white" />
                     </button>
-                  </>
-                )}
+                  )}
+                </div>
+
+                {/* Card content */}
+                <div className="p-4 h-1/2 overflow-y-auto bg-neutral-50">
+                  {showVideo && currentProject?.videoUrl ? (
+                    <div className="h-full w-full">
+                      <iframe
+                        src={currentProject.videoUrl}
+                        className="w-full h-full rounded-lg"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="mb-3">
+                        {currentProject?.isGrant ? (
+                          <h3 className="text-sm font-semibold text-gray-500">Problem</h3>
+                        ) : (
+                          <h3 className="text-sm font-semibold text-gray-500">Description</h3>
+                        )}
+                        <p
+                          className="text-gray-800 text-sm"
+                          dangerouslySetInnerHTML={{ __html: currentProject?.problem || 'No problem description' }}
+                        />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-500">Solution</h3>
+                        <p
+                          className="text-gray-800 text-sm"
+                          dangerouslySetInnerHTML={{ __html: currentProject?.solution || 'No solution description' }}
+                        />
+                      </div>
+                      <button
+                        onClick={goToDemo}
+                        className="flex items-center mt-4 text-green-600 font-semibold text-sm hover:text-green-700 transition-colors duration-200"
+                      >
+                        View Demo <ExternalLink size={16} className="ml-1" />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          </TinderCard>
+            </TinderCard>
+          </div>
         )}
       </div>
 
       {/* Progress indicator */}
       {!outOfProjects && (
-        <div className="flex gap-1 justify-center my-6">
+        <div className="flex gap-2 justify-center my-4 sm:my-6">
           {filteredProjects.map((_, idx) => (
             <div
               key={idx}
-              className={`h-1 rounded-full ${
-                idx === currentIndex ? 'w-8 bg-green-500' : 'w-2 bg-gray-300'
-              } transition-all duration-300`}
+              className={`h-2 w-2 rounded-full transition-all duration-300 ${
+                idx === currentIndex ? 'bg-green-500 scale-125' : 'bg-gray-300'
+              }`}
             />
           ))}
         </div>
@@ -515,16 +546,16 @@ export default function FrameApp() {
 
       {/* Action buttons */}
       {!outOfProjects && (
-        <div className="flex justify-center gap-8 mt-4">
+        <div className="flex justify-center gap-6 sm:gap-8 mt-4">
           <button
             onClick={() => handleSwipe('left')}
-            className="p-4 bg-white rounded-full shadow-lg border border-gray-200 hover:bg-red-50 transition-colors duration-200"
+            className="p-4 bg-white rounded-full shadow-lg border border-gray-200 hover:bg-red-50 hover:scale-110 transition-all duration-200"
           >
             <X size={24} className="text-red-500" />
           </button>
           <button
             onClick={() => handleSwipe('right')}
-            className="p-4 bg-gradient-to-r from-green-500 to-green-600 rounded-full shadow-lg hover:from-green-600 hover:to-green-700 transition-all duration-300"
+            className="p-4 bg-gradient-to-r from-green-500 to-green-600 rounded-full shadow-lg hover:from-green-600 hover:to-green-700 hover:scale-110 transition-all duration-300"
           >
             <Heart size={24} className="text-white" />
           </button>
@@ -532,7 +563,7 @@ export default function FrameApp() {
       )}
 
       {/* Season stats */}
-      <div className="mt-8 pt-4 border-t border-gray-200">
+      <div className="mt-6 sm:mt-8 pt-4 border-t border-gray-200">
         <div className="flex justify-between items-center text-sm text-gray-500">
           <span>{currentSeason?.name} • {filteredProjects.length} projects</span>
           <span>{currentSeason?.startDate} - {currentSeason?.endDate}</span>
@@ -541,3 +572,33 @@ export default function FrameApp() {
     </div>
   );
 }
+
+// CSS for animations (add to your CSS file or global styles)
+const styles = `
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  @keyframes slide-down {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .animate-fade-out {
+    animation: fade-out 0.5s ease-out forwards;
+  }
+
+  .animate-slide-down {
+    animation: slide-down 0.3s ease-out;
+  }
+`;
