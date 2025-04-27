@@ -444,89 +444,93 @@ export default function FrameApp() {
               </div>
             )}
             <TinderCard
-              onSwipe={handleSwipe}
-              preventSwipe={["up", "down"]}
-              key={currentProject?.id || 'empty'}
-              className="absolute w-full h-full"
-              swipeRequirementType="position"
-              swipeThreshold={100}
-            >
-              <div className="w-full h-full rounded-2xl shadow-2xl overflow-hidden bg-white transform transition-all duration-300 hover:scale-105 box-border">
-                {/* Card header with image */}
-                <div className="relative h-1/2">
-                  <img
-                    src={currentProject?.banner || celoImageURL}
-                    alt={currentProject?.title || 'Project'}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                  <div className="absolute top-3 left-3">
-                    <span className="px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
-                      S{currentProject?.season || ''}
-                    </span>
-                  </div>
-                  <div className="absolute bottom-0 left-0 p-4 w-full">
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {currentProject?.tags?.map(tag => (
-                        <span key={tag} className="px-2 py-1 bg-green-600/80 text-white text-xs rounded-full">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    <h2 className="text-lg sm:text-xl font-bold text-white truncate">{currentProject?.title || 'Untitled'}</h2>
-                  </div>
-                  {currentProject?.videoUrl && (
-                    <button
-                      onClick={toggleVideo}
-                      className="absolute top-3 right-3 bg-black/60 p-2 rounded-full hover:bg-black/80 transition-colors duration-200"
-                    >
-                      <Video size={20} className="text-white" />
-                    </button>
-                  )}
-                </div>
+  onSwipe={handleSwipe}
+  preventSwipe={["up", "down"]}
+  key={currentProject?.id || 'empty'}
+  className="absolute w-full h-full"
+  swipeRequirementType="position"
+  swipeThreshold={100}
+>
+  <div className="w-full h-full rounded-2xl shadow-2xl overflow-hidden bg-white transform transition-all duration-300 hover:scale-105 box-border">
+    {/* Card header with image */}
+    <div className="relative h-1/2">
+      <img
+        src={currentProject?.banner || celoImageURL}
+        alt={currentProject?.title || 'Project'}
+        className="w-full h-full object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+      <div className="absolute top-3 left-3">
+        <span className="px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
+          S{currentProject?.season || ''}
+        </span>
+      </div>
+      <div className="absolute bottom-0 left-0 p-4 w-full">
+        <div className="flex flex-wrap gap-2 mb-2">
+          {currentProject?.tags?.map(tag => (
+            <span key={tag} className="px-2 py-1 bg-green-600/80 text-white text-xs rounded-full">
+              {tag}
+            </span>
+          ))}
+        </div>
+        <h2 className="text-lg sm:text-xl font-bold text-white truncate">{currentProject?.title || 'Untitled'}</h2>
+      </div>
+      {currentProject?.videoUrl && (
+        <button
+          onClick={toggleVideo}
+          className="absolute top-3 right-3 bg-black/60 p-2 rounded-full hover:bg-black/80 transition-colors duration-200"
+        >
+          <Video size={20} className="text-white" />
+        </button>
+      )}
+    </div>
 
-                {/* Card content */}
-                <div className="p-4 h-1/2 overflow-y-auto bg-neutral-50">
-                  {showVideo && currentProject?.videoUrl ? (
-                    <div className="h-full w-full">
-                      <iframe
-                        src={currentProject.videoUrl}
-                        className="w-full h-full rounded-lg"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    </div>
-                  ) : (
-                    <>
-                      <div className="mb-3">
-                        {currentProject?.isGrant ? (
-                          <h3 className="text-sm font-semibold text-gray-500">Problem</h3>
-                        ) : (
-                          <h3 className="text-sm font-semibold text-gray-500">Description</h3>
-                        )}
-                        <p
-                          className="text-gray-800 text-sm"
-                          dangerouslySetInnerHTML={{ __html: currentProject?.problem || 'No problem description' }}
-                        />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-500">Solution</h3>
-                        <p
-                          className="text-gray-800 text-sm"
-                          dangerouslySetInnerHTML={{ __html: currentProject?.solution || 'No solution description' }}
-                        />
-                      </div>
-                      <button
-                        onClick={goToDemo}
-                        className="flex items-center mt-4 text-green-600 font-semibold text-sm hover:text-green-700 transition-colors duration-200"
-                      >
-                        View Demo <ExternalLink size={16} className="ml-1" />
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </TinderCard>
+    {/* Card content */}
+    <div
+      className="p-4 h-1/2 overflow-y-auto bg-neutral-50 scroll-smooth touch-pan-y"
+      onTouchStart={(e) => e.stopPropagation()} // Prevent swipe interference
+      onTouchMove={(e) => e.stopPropagation()} // Allow vertical scrolling
+    >
+      {showVideo && currentProject?.videoUrl ? (
+        <div className="h-full w-full">
+          <iframe
+            src={currentProject.videoUrl}
+            className="w-full h-full rounded-lg"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      ) : (
+        <>
+          <div className="mb-3">
+            {currentProject?.isGrant ? (
+              <h3 className="text-sm font-semibold text-gray-500">Problem</h3>
+            ) : (
+              <h3 className="text-sm font-semibold text-gray-500">Description</h3>
+            )}
+            <p
+              className="text-gray-800 text-sm"
+              dangerouslySetInnerHTML={{ __html: currentProject?.problem || 'No problem description' }}
+            />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-gray-500">Solution</h3>
+            <p
+              className="text-gray-800 text-sm"
+              dangerouslySetInnerHTML={{ __html: currentProject?.solution || 'No solution description' }}
+            />
+          </div>
+          <button
+            onClick={goToDemo}
+            className="flex items-center mt-4 text-green-600 font-semibold text-sm hover:text-green-700 transition-colors duration-200"
+          >
+            View Demo <ExternalLink size={16} className="ml-1" />
+          </button>
+        </>
+      )}
+    </div>
+  </div>
+</TinderCard>
           </div>
         )}
       </div>
@@ -576,30 +580,66 @@ export default function FrameApp() {
 
 // CSS for animations (add to your CSS file or global styles)
 const styles = `
-  @keyframes fade-in {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-  @keyframes fade-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
-  }
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
 
-  @keyframes slide-down {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-  .animate-fade-in {
-    animation: fade-in 0.3s ease-out;
-  }
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
 
-  .animate-fade-out {
-    animation: fade-out 0.5s ease-out forwards;
-  }
+.animate-fade-out {
+  animation: fade-out 0.5s ease-out forwards;
+}
 
-  .animate-slide-down {
-    animation: slide-down 0.3s ease-out;
-  }
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
+}
+
+/* New styles for smooth scrolling */
+.scroll-smooth {
+  -webkit-overflow-scrolling: touch; /* Momentum scrolling for iOS */
+  overscroll-behavior: contain; /* Prevent scroll chaining */
+  scroll-behavior: smooth; /* Smooth scrolling */
+  will-change: scroll-position; /* Optimize rendering */
+}
+
+.touch-pan-y {
+  touch-action: pan-y; /* Allow vertical touch scrolling */
+}
+
+/* Ensure the scrollable area is responsive */
+.overflow-y-auto {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #ccc transparent; /* Firefox */
+}
+
+/* Webkit scrollbar styling for better aesthetics */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
 `;
