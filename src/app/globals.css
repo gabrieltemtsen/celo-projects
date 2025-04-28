@@ -34,3 +34,51 @@ body {
     --radius: 0.5rem;
   }
 }
+/* Stabilize Tinder card on mobile */
+.tinder-card {
+  transform-origin: center;
+  touch-action: manipulation; /* Improve touch responsiveness */
+}
+
+/* Limit rotation and stabilize during swipe */
+.tinder-card > div {
+  transition: transform 0.3s ease-out;
+  max-width: 100%;
+}
+
+/* Ensure content is scrollable and readable on mobile */
+.scrollable-content {
+  font-size: 0.95rem; /* Slightly larger font for readability */
+  line-height: 1.5; /* Improved line spacing */
+  padding: 16px; /* Consistent padding */
+  overscroll-behavior: contain; /* Prevent overscrolling */
+  touch-action: pan-y; /* Allow vertical scrolling */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  max-height: 50vh; /* Ensure scrollable area fits within card */
+  min-height: 150px; /* Prevent collapse on short content */
+  overflow-y: auto; /* Explicit scrolling */
+}
+
+/* Media query for mobile devices */
+@media (max-width: 640px) {
+  .tinder-card {
+    /* Reduce rotation during swipe */
+    transform: perspective(1000px) rotateY(0deg) !important;
+  }
+  
+  .tinder-card.swiping {
+    transition: transform 0.2s ease-out;
+  }
+  .scroll-wrapper {
+    height: 100%;
+    width: 100%;
+    touch-action: pan-y;
+  }
+  
+  .scrollable-content {
+    font-size: 0.875rem; /* Slightly smaller for mobile */
+    line-height: 1.6; /* Better readability */
+    padding: 12px; /* Adjusted for smaller screens */
+    max-height: 45vh; /* Adjust for mobile screen size */
+  }
+}
