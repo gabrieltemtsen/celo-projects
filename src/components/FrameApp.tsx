@@ -740,12 +740,12 @@ export default function FrameApp() {
       S{currentProject?.season}
     </span>
     {/* tags */}
-    <div className="absolute bottom-0 left-0 p-4 flex flex-wrap gap-2">
-      {currentProject?.tags?.map(tag => (
-        <span key={tag} className="px-2 py-1 bg-green-600/80 text-white text-xs rounded-full">
-          {tag}
-        </span>
-      ))}
+    {/* tags + title */}
+  <div className="absolute bottom-0 left-0 p-4 flex flex-col gap-1">
+    
+      <h2 className="text-lg sm:text-xl font-bold text-white truncate">
+        {currentProject?.title ?? 'Untitled'}
+      </h2>
     </div>
     {/* video toggle button (if any) */}
     {currentProject?.videoUrl && (
