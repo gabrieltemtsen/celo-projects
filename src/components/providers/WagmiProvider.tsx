@@ -1,19 +1,15 @@
 import { createConfig, http, WagmiProvider } from "wagmi";
-import { base, celo, degen, mainnet, optimism, unichain } from "wagmi/chains";
+import { base, celo, } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { farcasterFrame } from "@farcaster/frame-wagmi-connector";
 
 export const config = createConfig({
-  chains: [base, optimism, mainnet, degen, unichain, celo],
+  chains: [base, celo],
   transports: {
     [base.id]: http(),
-    [optimism.id]: http(),
-    [mainnet.id]: http(),
-    [degen.id]: http(),
-    [unichain.id]: http(),
     [celo.id]: http(),
   },
-  connectors: [farcasterFrame()],
+  connectors: [farcasterFrame() ],
 });
 
 const queryClient = new QueryClient();

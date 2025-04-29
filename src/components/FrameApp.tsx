@@ -53,7 +53,6 @@ interface ProgramProject {
   program?: { programId: string }[];
 }
 
-// Project type for /communities/celo/grants
 interface GrantProject {
   uid: string;
   projectDetails: {
@@ -158,13 +157,13 @@ export default function FrameApp() {
   const [isDonating, setIsDonating] = useState(false);
   const [walletError, setWalletError] = useState<string | null>(null);
 
-  // Wallet hooks
-  const { address, isConnected, isConnecting } = useAccount();
-  const { connect, connectors, isPending: isConnectPending } = useConnect();
-  const { disconnect, isPending: isDisconnectPending } = useDisconnect();
-  const chainId = useChainId();
-  const { switchChain, isPending: isSwitchChainPending } = useSwitchChain();
-  const { sendTransaction, isPending: isSendTxPending } = useSendTransaction();
+   // Wallet hooks
+   const { address, isConnected, isConnecting } = useAccount();
+   const { connect, connectors, isPending: isConnectPending } = useConnect();
+   const { disconnect, isPending: isDisconnectPending } = useDisconnect();
+   const chainId = useChainId();
+   const { switchChain, isPending: isSwitchChainPending } = useSwitchChain();
+   const { sendTransaction, isPending: isSendTxPending } = useSendTransaction();
 
   // Transaction statuses
   const transactionStatuses = useTransactionStatuses(transactionHashes);
@@ -183,7 +182,7 @@ export default function FrameApp() {
     () => seasons.find(season => season.id === currentSeasonId),
     [seasons, currentSeasonId]
   );
-  const targetChain = currentSeason?.isGrant ? celo : base;
+  const targetChain = celo;
 
   // Load liked projects from localStorage on mount
   useEffect(() => {
