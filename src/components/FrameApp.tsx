@@ -489,12 +489,25 @@ export default function FrameApp() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center w-full h-64 bg-gray-100 rounded-2xl">
-        <div className="space-y-4 w-64">
-          <div className="h-4 bg-gray-300 rounded-full animate-pulse" />
-          <div className="h-4 bg-gray-300 rounded-full animate-pulse w-5/6" />
-          <div className="h-4 bg-gray-300 rounded-full animate-pulse" />
-          <div className="h-32 bg-gray-300 rounded-2xl animate-pulse" />
+      <div className="flex flex-col items-center justify-center w-full h-screen bg-neutral-50 dark:bg-neutral-900">
+        {/* Spinner + label */}
+        <Loader2 className="w-12 h-12 text-green-500 animate-spin mb-4" />
+        <p className="text-gray-600 dark:text-gray-400 mb-6">Loading projects…</p>
+  
+        {/* Skeleton “card” */}
+        <div className="w-11/12 max-w-md space-y-6">
+          {/* Header skeleton */}
+          <div className="h-6 bg-neutral-200 dark:bg-neutral-800 rounded-lg animate-pulse" />
+          {/* Subheader skeleton */}
+          <div className="h-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg w-3/4 animate-pulse" />
+          {/* Image/banner skeleton */}
+          <div className="h-48 bg-neutral-200 dark:bg-neutral-800 rounded-2xl animate-pulse" />
+          {/* Text lines skeleton */}
+          <div className="space-y-2">
+            <div className="h-3 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse" />
+            <div className="h-3 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse w-5/6" />
+            <div className="h-3 bg-neutral-200 dark:bg-neutral-800 rounded animate-pulse w-4/6" />
+          </div>
         </div>
       </div>
     );
