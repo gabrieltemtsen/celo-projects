@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 /* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState, useCallback, useMemo } from 'react';
@@ -15,6 +16,7 @@ import {
 } from 'wagmi';
 import { celo, base } from 'wagmi/chains';
 import { parseEther, isAddress } from 'viem';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Program type from API
 interface Program {
@@ -684,101 +686,126 @@ export default function FrameApp() {
                 </div>
               </div>
             )}
-            <TinderCard
-              onSwipe={handleSwipe}
-              preventSwipe={['up', 'down']}
-              key={currentProject?.id ?? 'empty'}
-              className="absolute w-full h-full"
-              swipeRequirementType="position"
-              swipeThreshold={150}
-            >
-              <div className="w-full h-full rounded-2xl shadow-2xl overflow-hidden bg-white transform transition-all duration-300 hover:scale-105 box-border">
-                <div className="relative h-1/2">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={currentProject?.banner ?? celoImageURL}
-                    alt={currentProject?.title ?? 'Project'}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                  <div className="absolute top-3 left-3">
-                    <span className="px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
-                      S{currentProject?.season ?? ''}
-                    </span>
-                  </div>
-                  <div className="absolute bottom-0 left-0 p-4 w-full">
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {currentProject?.tags?.map(tag => (
-                        <span key={tag} className="px-2 py-1 bg-green-600/80 text-white text-xs rounded-full">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    <h2 className="text-lg sm:text-xl font-bold text-white truncate">
-                      {currentProject?.title ?? 'Untitled'}
-                    </h2>
-                  </div>
-                  {currentProject?.videoUrl && (
-                    <button
-                      onClick={toggleVideo}
-                      className="absolute top-3 right-3 bg-black/60 p-2 rounded-full hover:bg-black/80 transition-colors duration-200"
-                    >
-                      <Video size={20} className="text-white" />
-                    </button>
-                  )}
-                </div>
+            <AnimatePresence initial={false} custom={direction}>
+  {currentProject && (
+    <motion.div
+      key={currentProject.id}
+      className="absolute w-full h-full"
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.4}
+      onDragEnd={(_, info) => {
+        if (info.offset.x > 100) handleSwipe('right');
+        else if (info.offset.x < -100) handleSwipe('left');
+      }}
+      custom={direction}
+      initial={{
+        x: direction === 'right' ? -300 : direction === 'left' ? 300 : 0,
+        opacity: 0
+      }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={direction === 'right'
+        ? { x: 300, opacity: 0 }
+        : { x: -300, opacity: 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      whileTap={{ cursor: 'grabbing' }}
+    >
+      <div className="w-full h-full rounded-2xl shadow-2xl overflow-hidden bg-white">
+  {/* —————————————————————————————————————————————— */}
+  {/* 1) Banner Image + Overlay */}
+  <div className="relative h-[45%]">
+    {/* project image */}
+    <img
+      src={currentProject?.banner ?? celoImageURL}
+      alt={currentProject?.title ?? 'Project banner'}
+      className="w-full h-full object-cover"
+    />
+    {/* dark gradient so text stays legible */}
+    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+    {/* season badge */}
+    <span className="absolute top-3 left-3 px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
+      S{currentProject?.season}
+    </span>
+    {/* tags */}
+    <div className="absolute bottom-0 left-0 p-4 flex flex-wrap gap-2">
+      {currentProject?.tags?.map(tag => (
+        <span key={tag} className="px-2 py-1 bg-green-600/80 text-white text-xs rounded-full">
+          {tag}
+        </span>
+      ))}
+    </div>
+    {/* video toggle button (if any) */}
+    {currentProject?.videoUrl && (
+      <button
+        onClick={toggleVideo}
+        className="absolute top-3 right-3 bg-black/60 p-2 rounded-full hover:bg-black/80 transition-colors duration-200"
+      >
+        <Video size={20} className="text-white" />
+      </button>
+    )}
+  </div>
 
-                <div
-  className="p-4 h-1/2 overflow-y-auto bg-neutral-50 scroll-smooth scrollable-content scroll-wrapper"
-  onTouchStart={e => {
-    e.stopPropagation();
-    e.currentTarget.style.overflowY = 'auto'; // Ensure scrolling is enabled
-  }}
-  onTouchMove={e => e.stopPropagation()}
-  onTouchEnd={e => e.stopPropagation()}
->
-  {showVideo && currentProject?.videoUrl ? (
-    <div className="h-full w-full">
+  {/* —————————————————————————————————————————————— */}
+  {/* 2) Scrollable Info Panel */}
+  <div
+    className="relative p-4 max-h-[55%] overflow-y-auto bg-neutral-50"
+    onTouchStart={e => {
+      e.stopPropagation();
+      e.currentTarget.style.overflowY = 'auto';
+    }}
+    onTouchMove={e => e.stopPropagation()}
+  >
+    {/* fading gradient hint */}
+    <div className="pointer-events-none absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-neutral-50" />
+
+    {/* bouncing arrow hint */}
+    <div className="pointer-events-none absolute bottom-2 left-1/2 transform -translate-x-1/2 animate-bounce">
+      <ChevronDown size={24} className="text-gray-400" />
+    </div>
+
+    {showVideo && currentProject?.videoUrl ? (
       <iframe
         src={currentProject.videoUrl}
         className="w-full h-full rounded-lg"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
       />
-    </div>
-  ) : (
-    <>
-      <div className="mb-3">
-        <h3 className="text-sm font-semibold text-gray-500">
-          {currentProject?.isGrant ? 'Problem' : 'Description'}
-        </h3>
-        <p
-          className="text-gray-800 text-sm leading-relaxed"
-          dangerouslySetInnerHTML={{
-            __html: currentProject?.problem ?? 'No problem description',
-          }}
-        />
-      </div>
-      <div>
-        <h3 className="text-sm font-semibold text-gray-500">Solution</h3>
-        <p
-          className="text-gray-800 text-sm leading-relaxed"
-          dangerouslySetInnerHTML={{
-            __html: currentProject?.solution ?? 'No solution description',
-          }}
-        />
-      </div>
-      <button
-        onClick={goToDemo}
-        className="flex items-center mt-4 text-green-600 font-semibold text-sm hover:text-green-700 transition-colors duration-200"
-      >
-        View Demo <ExternalLink size={16} className="ml-1" />
-      </button>
-    </>
-  )}
+    ) : (
+      <>
+        <div className="mb-3">
+          <h3 className="text-sm font-semibold text-gray-500">
+            {currentProject?.isGrant ? 'Problem' : 'Description'}
+          </h3>
+          <p
+            className="text-gray-800 text-sm leading-relaxed"
+            dangerouslySetInnerHTML={{
+              __html: currentProject?.problem ?? 'No problem description',
+            }}
+          />
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold text-gray-500">Solution</h3>
+          <p
+            className="text-gray-800 text-sm leading-relaxed"
+            dangerouslySetInnerHTML={{
+              __html: currentProject?.solution ?? 'No solution description',
+            }}
+          />
+        </div>
+        <button
+          onClick={goToDemo}
+          className="flex items-center mt-4 text-green-600 font-semibold text-sm hover:text-green-700 transition-colors duration-200"
+        >
+          View Demo <ExternalLink size={16} className="ml-1" />
+        </button>
+      </>
+    )}
+  </div>
 </div>
-              </div>
-            </TinderCard>
+
+    </motion.div>
+  )}
+</AnimatePresence>
           </div>
         )}
       </div>
