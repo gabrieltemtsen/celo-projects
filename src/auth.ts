@@ -1,4 +1,4 @@
-import { AuthOptions, getServerSession } from "next-auth"
+import { AuthOptions, getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { createAppClient, viemConnector } from "@farcaster/auth-client";
 
@@ -12,21 +12,21 @@ declare module "next-auth" {
 
 function getDomainFromUrl(urlString: string | undefined): string {
   if (!urlString) {
-    console.warn('NEXTAUTH_URL is not set, using localhost:3000 as fallback');
-    return 'localhost:3000';
+    console.warn("NEXTAUTH_URL is not set, using localhost:3000 as fallback");
+    return "localhost:3000";
   }
   try {
     const url = new URL(urlString);
     return url.hostname;
   } catch (error) {
-    console.error('Invalid NEXTAUTH_URL:', urlString, error);
-    console.warn('Using localhost:3000 as fallback');
-    return 'localhost:3000';
+    console.error("Invalid NEXTAUTH_URL:", urlString, error);
+    console.warn("Using localhost:3000 as fallback");
+    return "localhost:3000";
   }
 }
 
 export const authOptions: AuthOptions = {
-    // Configure one or more authentication providers
+  // Configure one or more authentication providers
   providers: [
     CredentialsProvider({
       name: "Sign in with Farcaster",
@@ -59,7 +59,7 @@ export const authOptions: AuthOptions = {
       async authorize(credentials, req) {
         const csrfToken = req?.body?.csrfToken;
         if (!csrfToken) {
-          console.error('CSRF token is missing from request');
+          console.error("CSRF token is missing from request");
           return null;
         }
 
@@ -90,7 +90,7 @@ export const authOptions: AuthOptions = {
   callbacks: {
     session: async ({ session, token }) => {
       if (session?.user) {
-        session.user.fid = parseInt(token.sub ?? '');
+        session.user.fid = parseInt(token.sub ?? "");
       }
       return session;
     },
@@ -102,16 +102,16 @@ export const authOptions: AuthOptions = {
         httpOnly: true,
         sameSite: "none",
         path: "/",
-        secure: true
-      }
+        secure: true,
+      },
     },
     callbackUrl: {
       name: `next-auth.callback-url`,
       options: {
         sameSite: "none",
         path: "/",
-        secure: true
-      }
+        secure: true,
+      },
     },
     csrfToken: {
       name: `next-auth.csrf-token`,
@@ -119,17 +119,17 @@ export const authOptions: AuthOptions = {
         httpOnly: true,
         sameSite: "none",
         path: "/",
-        secure: true
-      }
-    }
-  }
-}
+        secure: true,
+      },
+    },
+  },
+};
 
 export const getSession = async () => {
   try {
     return await getServerSession(authOptions);
   } catch (error) {
-    console.error('Error getting server session:', error);
+    console.error("Error getting server session:", error);
     return null;
   }
-}
+};

@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import sdk, { type Context, type FrameNotificationDetails, AddFrame } from "@farcaster/frame-sdk";
+import sdk, {
+  type Context,
+  type FrameNotificationDetails,
+  AddFrame,
+} from "@farcaster/frame-sdk";
 import { createStore } from "mipd";
 import React from "react";
 
@@ -10,13 +14,16 @@ interface FrameContextType {
   context: Context.FrameContext | undefined;
 }
 
-const FrameContext = React.createContext<FrameContextType | undefined>(undefined);
+const FrameContext = React.createContext<FrameContextType | undefined>(
+  undefined,
+);
 
 export function useFrame() {
   const [isSDKLoaded, setIsSDKLoaded] = useState(false);
   const [context, setContext] = useState<Context.FrameContext>();
   const [added, setAdded] = useState(false);
-  const [notificationDetails, setNotificationDetails] = useState<FrameNotificationDetails | null>(null);
+  const [notificationDetails, setNotificationDetails] =
+    useState<FrameNotificationDetails | null>(null);
   const [lastEvent, setLastEvent] = useState("");
   const [addFrameResult, setAddFrameResult] = useState("");
 
@@ -32,7 +39,7 @@ export function useFrame() {
       setAddFrameResult(
         result.notificationDetails
           ? `Added, got notificaton token ${result.notificationDetails.token} and url ${result.notificationDetails.url}`
-          : "Added, got no notification details"
+          : "Added, got no notification details",
       );
     } catch (error) {
       if (error instanceof AddFrame.RejectedByUser) {
@@ -111,7 +118,15 @@ export function useFrame() {
     }
   }, [isSDKLoaded]);
 
-  return { isSDKLoaded, context, added, notificationDetails, lastEvent, addFrame, addFrameResult };
+  return {
+    isSDKLoaded,
+    context,
+    added,
+    notificationDetails,
+    lastEvent,
+    addFrame,
+    addFrameResult,
+  };
 }
 
 export function FrameProvider({ children }: { children: React.ReactNode }) {
@@ -126,4 +141,4 @@ export function FrameProvider({ children }: { children: React.ReactNode }) {
       {children}
     </FrameContext.Provider>
   );
-} 
+}

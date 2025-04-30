@@ -3,9 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Input } from "../components/ui/input";
 import { signIn, signOut, getCsrfToken } from "next-auth/react";
-import sdk, {
-  SignIn as SignInCore,
-} from "@farcaster/frame-sdk";
+import sdk, { SignIn as SignInCore } from "@farcaster/frame-sdk";
 import {
   useAccount,
   useSendTransaction,
@@ -28,9 +26,17 @@ import { Label } from "~/components/ui/label";
 import { useFrame } from "~/components/providers/FrameProvider";
 
 export default function Demo(
-  { title }: { title?: string } = { title: "Frames v2 Demo" }
+  { title }: { title?: string } = { title: "Frames v2 Demo" },
 ) {
-  const { isSDKLoaded, context, added, notificationDetails, lastEvent, addFrame, addFrameResult } = useFrame();
+  const {
+    isSDKLoaded,
+    context,
+    added,
+    notificationDetails,
+    lastEvent,
+    addFrame,
+    addFrameResult,
+  } = useFrame();
   const [isContextOpen, setIsContextOpen] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
 
@@ -141,7 +147,7 @@ export default function Demo(
         onSuccess: (hash) => {
           setTxHash(hash);
         },
-      }
+      },
     );
   }, [sendTransaction]);
 
@@ -358,8 +364,8 @@ export default function Demo(
                       {isConfirming
                         ? "Confirming..."
                         : isConfirmed
-                        ? "Confirmed!"
-                        : "Pending"}
+                          ? "Confirmed!"
+                          : "Pending"}
                     </div>
                   </div>
                 )}
@@ -480,8 +486,8 @@ function SendEth() {
             {isConfirming
               ? "Confirming..."
               : isConfirmed
-              ? "Confirmed!"
-              : "Pending"}
+                ? "Confirmed!"
+                : "Pending"}
           </div>
         </div>
       )}
@@ -613,7 +619,7 @@ const renderError = (error: Error | null) => {
   if (!error) return null;
   if (error instanceof BaseError) {
     const isUserRejection = error.walk(
-      (e) => e instanceof UserRejectedRequestError
+      (e) => e instanceof UserRejectedRequestError,
     );
 
     if (isUserRejection) {
@@ -623,4 +629,3 @@ const renderError = (error: Error | null) => {
 
   return <div className="text-red-500 text-xs mt-1">{error.message}</div>;
 };
-

@@ -13,7 +13,8 @@ const requestSchema = z.object({
 export async function POST(request: NextRequest) {
   // If Neynar is enabled, we don't need to store notification details
   // as they will be managed by Neynar's system
-  const neynarEnabled = process.env.NEYNAR_API_KEY && process.env.NEYNAR_CLIENT_ID;
+  const neynarEnabled =
+    process.env.NEYNAR_API_KEY && process.env.NEYNAR_CLIENT_ID;
 
   const requestJson = await request.json();
   const requestBody = requestSchema.safeParse(requestJson);
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
   if (requestBody.success === false) {
     return Response.json(
       { success: false, errors: requestBody.error.errors },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -29,12 +30,14 @@ export async function POST(request: NextRequest) {
   if (!neynarEnabled) {
     await setUserNotificationDetails(
       Number(requestBody.data.fid),
-      requestBody.data.notificationDetails
+      requestBody.data.notificationDetails,
     );
   }
 
   // Use appropriate notification function based on Neynar status
-  const sendNotification = neynarEnabled ? sendNeynarFrameNotification : sendFrameNotification;
+  const sendNotification = neynarEnabled
+    ? sendNeynarFrameNotification
+    : sendFrameNotification;
   const sendResult = await sendNotification({
     fid: Number(requestBody.data.fid),
     title: "Test notification",
@@ -44,12 +47,12 @@ export async function POST(request: NextRequest) {
   if (sendResult.state === "error") {
     return Response.json(
       { success: false, error: sendResult.error },
-      { status: 500 }
+      { status: 500 },
     );
   } else if (sendResult.state === "rate_limit") {
     return Response.json(
       { success: false, error: "Rate limited" },
-      { status: 429 }
+      { status: 429 },
     );
   }
 

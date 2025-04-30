@@ -1,6 +1,6 @@
-import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-import { mnemonicToAccount } from 'viem/accounts';
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { mnemonicToAccount } from "viem/accounts";
 
 interface FrameMetadata {
   accountAssociation?: {
@@ -28,7 +28,7 @@ export function cn(...inputs: ClassValue[]) {
 export function getSecretEnvVars() {
   const seedPhrase = process.env.SEED_PHRASE;
   const fid = process.env.FID;
-  
+
   if (!seedPhrase || !fid) {
     return null;
   }
@@ -41,21 +41,23 @@ export async function getFarcasterMetadata(): Promise<FrameMetadata> {
   if (process.env.FRAME_METADATA) {
     try {
       return JSON.parse(process.env.FRAME_METADATA);
-    } catch { /*…*/ }
+    } catch {
+      /*…*/
+    }
   }
 
   const appUrl = process.env.NEXT_PUBLIC_URL;
-  if (!appUrl) throw new Error('NEXT_PUBLIC_URL not configured');
+  if (!appUrl) throw new Error("NEXT_PUBLIC_URL not configured");
   const domain = new URL(appUrl).hostname;
 
   // 2) Try static override first
-  let accountAssociation: FrameMetadata['accountAssociation'] | undefined;
+  let accountAssociation: FrameMetadata["accountAssociation"] | undefined;
   if (process.env.STATIC_ACCOUNT_ASSOCIATION) {
     try {
       accountAssociation = JSON.parse(process.env.STATIC_ACCOUNT_ASSOCIATION);
-      console.log('Using static accountAssociation from env');
+      console.log("Using static accountAssociation from env");
     } catch (err) {
-      console.warn('Bad STATIC_ACCOUNT_ASSOCIATION JSON:', err);
+      console.warn("Bad STATIC_ACCOUNT_ASSOCIATION JSON:", err);
     }
   }
 
@@ -64,14 +66,22 @@ export async function getFarcasterMetadata(): Promise<FrameMetadata> {
     const secretEnv = getSecretEnvVars();
     if (secretEnv) {
       const acct = mnemonicToAccount(secretEnv.seedPhrase);
-      const header = { fid: +secretEnv.fid, type: 'custody', key: acct.address };
-      const hEnc = Buffer.from(JSON.stringify(header), 'utf-8').toString('base64');
-      const pEnc = Buffer.from(JSON.stringify({ domain }), 'utf-8').toString('base64url');
-      const sig  = await acct.signMessage({ message: `${hEnc}.${pEnc}` });
-      const sEnc = Buffer.from(sig, 'utf-8').toString('base64url');
+      const header = {
+        fid: +secretEnv.fid,
+        type: "custody",
+        key: acct.address,
+      };
+      const hEnc = Buffer.from(JSON.stringify(header), "utf-8").toString(
+        "base64",
+      );
+      const pEnc = Buffer.from(JSON.stringify({ domain }), "utf-8").toString(
+        "base64url",
+      );
+      const sig = await acct.signMessage({ message: `${hEnc}.${pEnc}` });
+      const sEnc = Buffer.from(sig, "utf-8").toString("base64url");
       accountAssociation = { header: hEnc, payload: pEnc, signature: sEnc };
     } else {
-      console.warn('No seedPhrase/FID—metadata will be unsigned');
+      console.warn("No seedPhrase/FID—metadata will be unsigned");
     }
   }
 
@@ -96,4 +106,3 @@ export async function getFarcasterMetadata(): Promise<FrameMetadata> {
     },
   };
 }
-

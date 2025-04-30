@@ -13,7 +13,8 @@ import { sendFrameNotification } from "~/lib/notifs";
 export async function POST(request: NextRequest) {
   // If Neynar is enabled, we don't need to handle webhooks here
   // as they will be handled by Neynar's webhook endpoint
-  const neynarEnabled = process.env.NEYNAR_API_KEY && process.env.NEYNAR_CLIENT_ID;
+  const neynarEnabled =
+    process.env.NEYNAR_API_KEY && process.env.NEYNAR_CLIENT_ID;
   if (neynarEnabled) {
     return Response.json({ success: true });
   }
@@ -32,19 +33,19 @@ export async function POST(request: NextRequest) {
         // The request data is invalid
         return Response.json(
           { success: false, error: error.message },
-          { status: 400 }
+          { status: 400 },
         );
       case "VerifyJsonFarcasterSignature.InvalidAppKeyError":
         // The app key is invalid
         return Response.json(
           { success: false, error: error.message },
-          { status: 401 }
+          { status: 401 },
         );
       case "VerifyJsonFarcasterSignature.VerifyAppKeyError":
         // Internal error verifying the app key (caller may want to try again)
         return Response.json(
           { success: false, error: error.message },
-          { status: 500 }
+          { status: 500 },
         );
     }
   }
