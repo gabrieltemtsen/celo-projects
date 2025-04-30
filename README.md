@@ -66,9 +66,11 @@ Celo Projects is designed as a Farcaster mini-app, accessible via Frames. To use
    ```
 2. Install Dependencies:
 
-- yarn install
+- npm install
 
 3. Environment Variables:
 - Create a .env.local file in the root directory:
 check .env.example
+4. Run
+ - npm run dev
 
